@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LAN Remote 使用说明</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>🖥 LAN Remote</h1>
+
+        <div class="card">
+            <h2>这是什么</h2>
+            <p>
+                局域网远程控制工具。桌面端程序同时具备<strong>被控端</strong>与<strong>控制端</strong>两种能力，
+                无需浏览器即可使用。
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>被控端（让别人控制这台电脑）</h2>
+            <ol>
+                <li>运行 <code>python main.py</code>，主界面会显示设备 ID、临时密码与监听端口。</li>
+                <li>把 IP、端口和临时密码告诉控制方。</li>
+                <li>临时密码到期会自动刷新，界面上显示的始终是当前有效密码。</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>控制端（控制别人的电脑）</h2>
+            <p>两种接入方式，任选其一：</p>
+            <ol>
+                <li><strong>密码直连</strong>：填对方 IP + 临时密码，直接接入（端口留空默认 9527）。</li>
+                <li><strong>设备 ID 授权</strong>：只填对方的设备 ID，对方屏幕会弹出确认框，
+                    点击「Yes」同意后才能接入，无需知道 IP 和密码。</li>
+            </ol>
+            <p>
+                连接成功后自动打开远程桌面窗口，支持鼠标拖拽、右键、滚轮与组合键；
+                F11 切换全屏，ESC 退出全屏。远程窗口关闭后连接仍保持，可从主界面重新打开。
+            </p>
+            <p>
+                连接期间还可以使用<strong>远程聊天</strong>与<strong>文件传输</strong>：
+                聊天双方实时互发消息；文件支持拖拽发送、双向传输，接收到的文件自动保存在
+                程序目录的 <code>downloads</code> 文件夹中。
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>说明</h2>
+            <p>
+                本页面仅为静态使用说明，不参与程序运行；所有连接与授权均在桌面端程序中完成。
+            </p>
+        </div>
+    </div>
+
+</body>
+
+</html>

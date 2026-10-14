@@ -1,0 +1,947 @@
+/* ============================================================================
+   LAN Remote · 现代主题模板
+   ----------------------------------------------------------------------------
+   本文件是「模板」，不是最终样式：
+   所有双花括号占位符都会在 ui/theme.py 里被替换成当前主题的色值 / 图标路径，
+   替换完成后才交给 Qt。因此这里只写结构与取值位置，不写死颜色。
+
+   要调整全局视觉，改这一份即可；不要在窗口代码里再写零散样式，
+   否则深浅色切换时会漏掉（花屏）。
+
+   占位符两类：
+     bg / accent …      颜色令牌（见 theme.PALETTES）
+     asset_check …      程序化生成的 PNG 图标（勾选 / 箭头）
+   ============================================================================ */
+
+/* -------------------------------------------------------------------- 基础 */
+QWidget
+{
+    background: {{bg}};
+    color: {{text}};
+    font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    font-size: 14px;
+}
+
+QMainWindow, QDialog, QScrollArea, QStackedWidget
+{
+    background: {{bg}};
+}
+
+/* 滚动区内容层透明，卡片自己带底色 */
+QScrollArea
+{
+    border: none;
+}
+
+QScrollArea > QWidget > QWidget
+{
+    background: transparent;
+}
+
+QToolTip
+{
+    background: {{tip_bg}};
+    color: {{tip_text}};
+    border: 1px solid {{border_strong}};
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+/* ---------------------------------------------------------------- 通用文本 */
+QLabel
+{
+    background: transparent;
+}
+
+QCheckBox, QRadioButton
+{
+    background: transparent;
+    spacing: 9px;
+}
+
+#title
+{
+    font-size: 24px;
+    font-weight: 700;
+    color: {{text}};
+    letter-spacing: 0.5px;
+}
+
+#passwordLabel
+{
+    color: {{warn_text}};
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+#statusBar
+{
+    color: {{text_2}};
+    font-size: 13px;
+    padding: 4px 2px;
+}
+
+#hintLabel
+{
+    color: {{text_3}};
+    font-size: 12px;
+}
+
+/* ------------------------------------------------------------ 顶部品牌区 */
+#appHeader
+{
+    background: {{surface}};
+    border: 1px solid {{border}};
+    border-radius: 16px;
+}
+
+#headerTitle
+{
+    font-size: 21px;
+    font-weight: 700;
+    color: {{text}};
+    letter-spacing: 0.6px;
+}
+
+#headerSubtitle
+{
+    font-size: 12px;
+    color: {{text_3}};
+    letter-spacing: 0.4px;
+}
+
+#headerVersion
+{
+    background: {{accent_soft}};
+    color: {{accent}};
+    border: 1px solid {{accent_border}};
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* 连接状态胶囊：靠动态属性 state 变色 */
+#statusChip
+{
+    background: {{chip_bg}};
+    color: {{text_2}};
+    border: 1px solid {{chip_border}};
+    border-radius: 999px;
+    padding: 5px 13px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#statusChip[state="online"]
+{
+    background: {{success_soft}};
+    color: {{success_text}};
+    border: 1px solid {{success_border}};
+}
+
+#statusChip[state="pending"]
+{
+    background: {{warn_soft}};
+    color: {{warn_text}};
+    border: 1px solid {{warn_border}};
+}
+
+#statusChip[state="offline"]
+{
+    background: {{danger_soft}};
+    color: {{danger_text}};
+    border: 1px solid {{danger_border}};
+}
+
+/* ------------------------------------------------------------------ 卡片 */
+QGroupBox
+{
+    background: {{surface}};
+    border: 1px solid {{border}};
+    border-radius: 14px;
+    margin-top: 20px;
+    padding: 18px 16px 16px 16px;
+}
+
+QGroupBox::title
+{
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 14px;
+    top: 1px;
+    padding: 3px 10px;
+    background: {{accent_soft}};
+    border: 1px solid {{accent_border}};
+    border-radius: 8px;
+    color: {{accent}};
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* 卡片内的并排字段标签 */
+#fieldLabel
+{
+    color: {{text_3}};
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* 用来承载按钮行的透明容器（MainWindow._wrap 创建） */
+#rowHolder
+{
+    background: transparent;
+}
+
+/* ------------------------------------------------------------------ 输入 */
+QLineEdit, QPlainTextEdit, QTextEdit
+{
+    background: {{surface_2}};
+    border: 1px solid {{border_strong}};
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: {{text}};
+    selection-background-color: {{accent}};
+    selection-color: {{on_accent}};
+}
+
+QLineEdit:hover
+{
+    border: 1px solid {{text_3}};
+}
+
+QLineEdit:focus
+{
+    border: 1px solid {{accent}};
+    background: {{surface}};
+}
+
+QLineEdit:disabled
+{
+    background: {{surface_2}};
+    color: {{text_3}};
+    border: 1px solid {{border}};
+}
+
+QLineEdit::placeholder
+{
+    color: {{text_3}};
+}
+
+#logView
+{
+    background: {{log_bg}};
+    border: 1px solid {{log_border}};
+    border-radius: 10px;
+    padding: 8px;
+    color: {{text_2}};
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-size: 12px;
+}
+
+/* ------------------------------------------------------------------ 下拉框 */
+QComboBox
+{
+    background: {{surface_2}};
+    border: 1px solid {{border_strong}};
+    border-radius: 10px;
+    padding: 7px 30px 7px 12px;
+    color: {{text}};
+}
+
+QComboBox:hover
+{
+    border: 1px solid {{text_3}};
+}
+
+QComboBox:focus, QComboBox:on
+{
+    border: 1px solid {{accent}};
+    background: {{surface}};
+}
+
+QComboBox:disabled
+{
+    color: {{text_3}};
+    background: {{surface_2}};
+    border: 1px solid {{border}};
+}
+
+QComboBox::drop-down
+{
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 26px;
+    border: none;
+    background: transparent;
+}
+
+QComboBox::down-arrow
+{
+    image: {{asset_chevron}};
+    width: 14px;
+    height: 14px;
+}
+
+QComboBox QAbstractItemView
+{
+    background: {{surface}};
+    border: 1px solid {{border_strong}};
+    border-radius: 10px;
+    padding: 5px;
+    color: {{text}};
+    outline: none;
+    selection-background-color: {{accent_soft}};
+    selection-color: {{accent}};
+}
+
+QComboBox QAbstractItemView::item
+{
+    padding: 7px 10px;
+    border-radius: 7px;
+    min-height: 20px;
+}
+
+QComboBox QAbstractItemView::item:hover
+{
+    background: {{surface_3}};
+}
+
+/* ---------------------------------------------------------------- 数值输入 */
+QSpinBox, QDoubleSpinBox
+{
+    background: {{surface_2}};
+    border: 1px solid {{border_strong}};
+    border-radius: 10px;
+    padding: 7px 8px 7px 12px;
+    color: {{text}};
+    selection-background-color: {{accent}};
+    selection-color: {{on_accent}};
+}
+
+QSpinBox:hover, QDoubleSpinBox:hover
+{
+    border: 1px solid {{text_3}};
+}
+
+QSpinBox:focus, QDoubleSpinBox:focus
+{
+    border: 1px solid {{accent}};
+    background: {{surface}};
+}
+
+QSpinBox::up-button, QDoubleSpinBox::up-button
+{
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 22px;
+    border: none;
+    border-left: 1px solid {{border}};
+    border-top-right-radius: 9px;
+    background: transparent;
+}
+
+QSpinBox::down-button, QDoubleSpinBox::down-button
+{
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 22px;
+    border: none;
+    border-left: 1px solid {{border}};
+    border-bottom-right-radius: 9px;
+    background: transparent;
+}
+
+QSpinBox::up-button:hover, QSpinBox::down-button:hover,
+QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover
+{
+    background: {{surface_3}};
+}
+
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow
+{
+    image: {{asset_arrow_up}};
+    width: 10px;
+    height: 10px;
+}
+
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow
+{
+    image: {{asset_arrow_down}};
+    width: 10px;
+    height: 10px;
+}
+
+/* ------------------------------------------------------------------ 按钮 */
+QPushButton
+{
+    background: {{grad_primary}};
+    color: {{on_accent}};
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    min-height: 18px;
+}
+
+QPushButton:hover
+{
+    background: {{accent_hover}};
+}
+
+QPushButton:pressed
+{
+    background: {{accent_press}};
+}
+
+QPushButton:focus
+{
+    outline: none;
+}
+
+QPushButton:disabled
+{
+    background: {{surface_2}};
+    color: {{text_3}};
+    border: 1px solid {{border}};
+}
+
+/* 次要按钮：描边风格 */
+#ghostButton
+{
+    background: {{surface_2}};
+    color: {{text}};
+    border: 1px solid {{border_strong}};
+}
+
+#ghostButton:hover
+{
+    background: {{surface_3}};
+    border: 1px solid {{text_3}};
+}
+
+#ghostButton:pressed
+{
+    background: {{surface_2}};
+}
+
+#ghostButton:checked
+{
+    background: {{accent_soft}};
+    color: {{accent}};
+    border: 1px solid {{accent_border}};
+}
+
+#ghostButton:disabled
+{
+    background: {{surface_2}};
+    color: {{text_3}};
+    border: 1px solid {{border}};
+}
+
+/* 主行动按钮：绿色渐变 */
+#connectButton
+{
+    background: {{grad_success}};
+    color: {{on_accent}};
+}
+
+#connectButton:hover
+{
+    background: {{success_hover}};
+}
+
+#connectButton:pressed
+{
+    background: {{success_press}};
+}
+
+#connectButton:disabled
+{
+    background: {{surface_2}};
+    color: {{text_3}};
+    border: 1px solid {{border}};
+}
+
+/* 危险按钮：柔和红底 + 红字 */
+#dangerButton
+{
+    background: {{danger_soft}};
+    color: {{danger_text}};
+    border: 1px solid {{danger_border}};
+}
+
+#dangerButton:hover
+{
+    background: {{danger}};
+    color: {{on_accent}};
+    border: 1px solid {{danger}};
+}
+
+#dangerButton:disabled
+{
+    background: {{surface_2}};
+    color: {{text_3}};
+    border: 1px solid {{border}};
+}
+
+/* 极简文字按钮 */
+#linkButton
+{
+    background: transparent;
+    color: {{text_2}};
+    border: none;
+    padding: 6px 8px;
+    font-weight: 500;
+}
+
+#linkButton:hover
+{
+    color: {{accent}};
+    background: transparent;
+}
+
+/* -------------------------------------------------------- 分段控制器按钮 */
+#segmentButton
+{
+    background: transparent;
+    color: {{text_2}};
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#segmentButton:hover
+{
+    color: {{text}};
+    background: {{surface_3}};
+}
+
+#segmentButton:checked
+{
+    background: {{surface}};
+    color: {{accent}};
+    border: 1px solid {{accent_border}};
+}
+
+#segmented
+{
+    background: {{surface_2}};
+    border: 1px solid {{border}};
+    border-radius: 11px;
+}
+
+/* 主窗口顶部的标签页条：比工具栏里的分段控制器更高、字更大 */
+#pageTabs
+{
+    background: {{surface_2}};
+    border: 1px solid {{border}};
+    border-radius: 13px;
+}
+
+#pageTabs #segmentButton
+{
+    padding: 10px 14px;
+    font-size: 13px;
+}
+
+/* ------------------------------------------------------- 工具按钮（带菜单） */
+QToolButton
+{
+    background: {{surface_2}};
+    color: {{text}};
+    border: 1px solid {{border_strong}};
+    border-radius: 10px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QToolButton:hover
+{
+    background: {{surface_3}};
+    border: 1px solid {{text_3}};
+}
+
+QToolButton:pressed
+{
+    background: {{surface_2}};
+}
+
+QToolButton::menu-indicator
+{
+    image: none;
+    width: 0;
+}
+
+/* ------------------------------------------------------------------ 列表 */
+QListWidget, QListView, QTreeWidget
+{
+    background: {{log_bg}};
+    border: 1px solid {{log_border}};
+    border-radius: 12px;
+    padding: 5px;
+    outline: none;
+    alternate-background-color: {{bg_alt}};
+}
+
+QListWidget::item, QListView::item, QTreeWidget::item
+{
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: {{text_2}};
+    border: 1px solid transparent;
+}
+
+QListWidget::item:hover, QListView::item:hover, QTreeWidget::item:hover
+{
+    background: {{surface_3}};
+    color: {{text}};
+}
+
+QListWidget::item:selected, QListView::item:selected, QTreeWidget::item:selected
+{
+    background: {{accent_soft}};
+    color: {{accent}};
+    border: 1px solid {{accent_border}};
+}
+
+#historyList
+{
+    font-size: 13px;
+}
+
+/* -------------------------------------------------------------- 表格 */
+/* 文件传输面板等处使用；Fusion 默认表格是白底黑字，深色主题下必须覆盖 */
+QTableWidget, QTableView
+{
+    background: {{log_bg}};
+    border: 1px solid {{log_border}};
+    border-radius: 12px;
+    gridline-color: {{divider}};
+    outline: none;
+    alternate-background-color: {{bg_alt}};
+    selection-background-color: {{accent_soft}};
+    selection-color: {{accent}};
+}
+
+QTableWidget::item, QTableView::item
+{
+    padding: 7px 10px;
+    border: none;
+}
+
+QTableWidget::item:hover, QTableView::item:hover
+{
+    background: {{surface_3}};
+}
+
+QTableWidget::item:selected, QTableView::item:selected
+{
+    background: {{accent_soft}};
+    color: {{text}};
+}
+
+QHeaderView::section
+{
+    background: {{surface_2}};
+    color: {{text_3}};
+    border: none;
+    border-bottom: 1px solid {{border}};
+    padding: 8px 10px;
+    font-weight: 600;
+}
+
+QHeaderView::section:first
+{
+    border-top-left-radius: 10px;
+}
+
+QHeaderView::section:last
+{
+    border-top-right-radius: 10px;
+}
+
+QTableCornerButton::section
+{
+    background: {{surface_2}};
+    border: none;
+}
+
+#transferTable
+{
+    font-size: 13px;
+}
+
+/* 表格行内的进度条：默认样式在单元格里会贴顶，用外边距把它压到垂直居中 */
+#rowProgress
+{
+    min-height: 8px;
+    max-height: 8px;
+    margin: 9px 6px;
+}
+
+/* -------------------------------------------------------------- 复选框 */
+QCheckBox::indicator
+{
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    border: 1px solid {{border_strong}};
+    background: {{surface_2}};
+}
+
+QCheckBox::indicator:hover
+{
+    border: 1px solid {{accent}};
+}
+
+QCheckBox::indicator:checked
+{
+    background: {{grad_primary}};
+    border: 1px solid {{accent}};
+    image: {{asset_check}};
+}
+
+QCheckBox::indicator:indeterminate
+{
+    background: {{grad_primary}};
+    border: 1px solid {{accent}};
+    image: {{asset_dash}};
+}
+
+QCheckBox:disabled
+{
+    color: {{text_3}};
+}
+
+/* -------------------------------------------------------------- 进度条 */
+QProgressBar
+{
+    background: {{surface_3}};
+    border: none;
+    border-radius: 6px;
+    min-height: 10px;
+    max-height: 10px;
+    text-align: center;
+    color: transparent;
+}
+
+QProgressBar::chunk
+{
+    background: {{grad_primary}};
+    border-radius: 6px;
+}
+
+/* -------------------------------------------------------------- 滚动条 */
+QScrollBar:vertical
+{
+    background: transparent;
+    width: 10px;
+    margin: 2px 0 2px 0;
+}
+
+QScrollBar:horizontal
+{
+    background: transparent;
+    height: 10px;
+    margin: 0 2px 0 2px;
+}
+
+QScrollBar::handle:vertical
+{
+    background: {{scroll}};
+    border-radius: 4px;
+    min-height: 36px;
+    margin: 0 2px 0 2px;
+}
+
+QScrollBar::handle:horizontal
+{
+    background: {{scroll}};
+    border-radius: 4px;
+    min-width: 36px;
+    margin: 2px 0 2px 0;
+}
+
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover
+{
+    background: {{scroll_hover}};
+}
+
+QScrollBar::add-line, QScrollBar::sub-line
+{
+    width: 0;
+    height: 0;
+}
+
+QScrollBar::add-page, QScrollBar::sub-page
+{
+    background: transparent;
+}
+
+/* ------------------------------------------------------------------ 菜单 */
+QMenu
+{
+    background: {{surface}};
+    border: 1px solid {{border_strong}};
+    border-radius: 12px;
+    padding: 6px;
+}
+
+QMenu::item
+{
+    padding: 8px 26px 8px 12px;
+    border-radius: 8px;
+    color: {{text}};
+    min-width: 130px;
+}
+
+QMenu::item:selected
+{
+    background: {{accent_soft}};
+    color: {{accent}};
+}
+
+QMenu::item:disabled
+{
+    color: {{text_3}};
+}
+
+QMenu::separator
+{
+    height: 1px;
+    background: {{divider}};
+    margin: 5px 8px;
+}
+
+QMenu::icon
+{
+    padding-left: 6px;
+}
+
+/* ------------------------------------------------ 底部工具条 / 底部状态栏 */
+#bottomBar
+{
+    background: {{rail_bg}};
+    border-top: 1px solid {{border}};
+}
+
+#mainScroll
+{
+    background: {{bg}};
+    border: none;
+}
+
+/* -------------------------------------------------------- 远程桌面工具栏 */
+#remoteToolbar
+{
+    background: {{rail_bg}};
+    border-bottom: 1px solid {{border}};
+}
+
+#toolLabel
+{
+    color: {{text_3}};
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    padding: 0 2px;
+}
+
+#toolSeparator
+{
+    background: {{divider}};
+    max-width: 1px;
+    margin: 6px 5px;
+}
+
+#remoteScroll
+{
+    background: {{screen_bg}};
+    border: none;
+}
+
+#remoteScreen
+{
+    background: {{screen_bg}};
+    color: {{screen_text}};
+    font-size: 15px;
+    border: none;
+}
+
+#remoteHud
+{
+    background: {{hud_bg}};
+    border-top: 1px solid {{hud_border}};
+    color: {{text_2}};
+    padding: 7px 14px;
+    font-size: 12px;
+}
+
+/* ------------------------------------------------------------ 关于对话框 */
+#aboutCard
+{
+    background: {{surface}};
+    border: 1px solid {{border}};
+    border-radius: 16px;
+}
+
+#aboutName
+{
+    font-size: 20px;
+    font-weight: 700;
+    color: {{text}};
+    letter-spacing: 0.5px;
+}
+
+#aboutDesc
+{
+    color: {{text_2}};
+    font-size: 13px;
+}
+
+#aboutMeta
+{
+    background: {{surface_2}};
+    border: 1px solid {{border}};
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: {{text_3}};
+    font-size: 12px;
+}
+
+#contactCard
+{
+    background: {{accent_soft}};
+    border: 1px solid {{accent_border}};
+    border-radius: 12px;
+    padding: 12px;
+    color: {{text}};
+    font-size: 13px;
+}
+
+/* ------------------------------------------------------------ 聊天窗口 */
+#chatView
+{
+    background: {{log_bg}};
+    border: 1px solid {{log_border}};
+    border-radius: 12px;
+    padding: 10px;
+    color: {{text}};
+    font-size: 13px;
+}
+
+/* -------------------------------------------------------- 小尺寸窗口提示 */
+#fileHint
+{
+    color: {{text_3}};
+    font-size: 12px;
+    padding: 2px 2px;
+}

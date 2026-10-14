@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1120">
+<title>LAN Remote · 手机控制端</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+    background:radial-gradient(120% 100% at 20% 0%, #16233f 0%, #0b1120 55%, #070c17 100%);
+    color:#e5eaf3; display:flex; flex-direction:column; overflow:hidden;
+  }
+  .hidden { display:none !important; }
+  .glass { background:rgba(23,34,58,0.72); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgba(120,150,200,0.18); }
+
+  /* ================= 登录 ================= */
+  #login { flex:1; display:flex; flex-direction:column; justify-content:center; padding:26px; position:relative; overflow:hidden; }
+  #login::before { content:""; position:absolute; inset:-40%; background:radial-gradient(40% 40% at 70% 20%, rgba(34,197,94,0.16), transparent 60%), radial-gradient(35% 35% at 20% 75%, rgba(56,132,255,0.14), transparent 60%); pointer-events:none; }
+  .logo { text-align:center; margin-bottom:24px; position:relative; }
+  .logo .badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; border-radius:999px; font-size:12px; letter-spacing:2px; color:#8ef0b6; border:1px solid rgba(34,197,94,0.35); background:rgba(34,197,94,0.08); }
+  .logo h1 { font-size:26px; font-weight:800; margin-top:14px; letter-spacing:1px; background:linear-gradient(92deg,#e8f0ff,#9fc1ff 60%,#8ef0b6); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .logo p { font-size:12px; color:#64748b; margin-top:6px; }
+  .card { position:relative; border-radius:18px; padding:22px 20px 14px; box-shadow:0 18px 50px rgba(0,0,0,0.45); }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:12px; color:#8ea0bd; margin-bottom:6px; letter-spacing:0.5px; }
+  .field input { width:100%; padding:13px 15px; border:1px solid #2c3b5c; border-radius:12px; background:rgba(11,17,32,0.85); color:#e5eaf3; font-size:16px; outline:none; transition:border .2s; }
+  .field input:focus { border-color:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,0.15); }
+  .btn { width:100%; padding:14px; border:none; border-radius:12px; font-size:16px; font-weight:bold; margin-bottom:12px; cursor:pointer; transition:transform .1s; }
+  .btn:active { transform:scale(0.98); }
+  .btn-primary { background:linear-gradient(93deg,#22c55e,#10b981); color:#04180c; box-shadow:0 8px 24px rgba(34,197,94,0.35); }
+  .btn-ghost { background:rgba(255,255,255,0.05); color:#9fb2d0; border:1px solid #2c3b5c; }
+  #loginStatus { text-align:center; font-size:13px; color:#f59e0b; min-height:20px; }
+  #loginStatus.err { color:#f87171; }
+
+  /* ================= 远程 ================= */
+  #remote { flex:1; display:flex; flex-direction:column; position:relative; }
+  #screenWrap { flex:1; overflow:hidden; background:#000; display:flex; align-items:center; justify-content:center; position:relative; }
+  #screen { max-width:100%; max-height:100%; display:block; touch-action:none; }
+
+  #topbar { position:absolute; top:8px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:10px; padding:6px 16px; border-radius:999px; font-size:11px; color:#9fb2d0; z-index:20; white-space:nowrap; }
+  #topbar .dot { width:7px; height:7px; border-radius:50%; background:#22c55e; box-shadow:0 0 8px #22c55e; }
+
+  #fsBtn { position:absolute; top:8px; right:10px; z-index:21; width:40px; height:40px; border-radius:12px; border:1px solid rgba(120,150,200,0.25); background:rgba(23,34,58,0.72); backdrop-filter:blur(10px); color:#cfe0ff; font-size:17px; cursor:pointer; }
+  #fsBtn:active { background:rgba(60,90,140,0.7); }
+
+  #toolbar { position:absolute; left:50%; bottom:12px; transform:translateX(-50%); display:flex; gap:7px; padding:8px 10px; border-radius:999px; z-index:20; max-width:96vw; overflow-x:auto; }
+  .tbtn { min-width:52px; padding:10px 12px; border:none; border-radius:999px; background:rgba(255,255,255,0.07); color:#dfe8f5; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .tbtn:active { background:rgba(34,197,94,0.28); color:#fff; }
+
+  /* ================= 抽屉 ================= */
+  #drawer { position:absolute; left:0; right:0; bottom:0; z-index:30; border-radius:20px 20px 0 0; padding:14px 16px calc(14px + env(safe-area-inset-bottom)); transform:translateY(105%); visibility:hidden; pointer-events:none; transition:transform .25s ease, visibility 0s linear .25s; max-height:72%; display:flex; flex-direction:column; }
+  #drawer.open { transform:translateY(0); visibility:visible; pointer-events:auto; transition:transform .25s ease; }
+  #drawerHead { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  #drawerTitle { font-size:15px; font-weight:bold; color:#e8f0ff; }
+  #drawerClose { border:none; background:rgba(255,255,255,0.08); color:#9fb2d0; width:32px; height:32px; border-radius:10px; font-size:15px; cursor:pointer; }
+  #drawerBody { overflow-y:auto; flex:1; }
+
+  /* 键盘面板 */
+  #keyInput { width:100%; padding:12px 14px; border:1px solid #2c3b5c; border-radius:12px; background:rgba(11,17,32,0.9); color:#e5eaf3; font-size:16px; outline:none; margin-bottom:10px; resize:none; line-height:1.5; font-family:inherit; }
+  #keyInput:focus { border-color:#22c55e; }
+  #keySendBtn { width:100%; padding:13px 0; border:none; border-radius:12px; background:linear-gradient(93deg,#22c55e,#10b981); color:#04180c; font-size:15px; font-weight:bold; cursor:pointer; margin-bottom:10px; }
+  #keySendBtn:active { transform:scale(0.98); }
+  .keyrow { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .kbtn { flex:1; min-width:60px; padding:12px 0; border:1px solid #2c3b5c; border-radius:10px; background:rgba(255,255,255,0.05); color:#dfe8f5; font-size:14px; cursor:pointer; }
+  .kbtn:active { background:rgba(34,197,94,0.25); }
+  .keyhint { font-size:11px; color:#64748b; margin-top:4px; }
+
+  /* 聊天面板 */
+  #chatLog { flex:1; overflow-y:auto; min-height:180px; padding-right:4px; }
+  .msg { margin-bottom:10px; display:flex; }
+  .msg.mine { justify-content:flex-end; }
+  .bubble { max-width:80%; padding:8px 13px; border-radius:14px; font-size:14px; line-height:1.6; }
+  .mine .bubble { background:linear-gradient(93deg,#22c55e,#10b981); color:#04180c; border-bottom-right-radius:4px; }
+  .theirs .bubble { background:rgba(255,255,255,0.08); border-bottom-left-radius:4px; }
+  .who { font-size:11px; color:#64748b; margin-bottom:2px; }
+  #chatSendRow { display:flex; gap:8px; margin-top:10px; }
+  #chatInput { flex:1; padding:12px 14px; border:1px solid #2c3b5c; border-radius:12px; background:rgba(11,17,32,0.9); color:#e5eaf3; font-size:15px; outline:none; }
+  #chatSend { padding:12px 20px; border:none; border-radius:12px; background:linear-gradient(93deg,#22c55e,#10b981); color:#04180c; font-weight:bold; cursor:pointer; }
+
+  /* 文件面板 */
+  #filePick { display:none; }
+  #filePickLabel { display:block; text-align:center; padding:16px; border:1.5px dashed #3b527a; border-radius:14px; color:#9fb2d0; font-size:14px; cursor:pointer; margin-bottom:12px; }
+  #filePickLabel:active { border-color:#22c55e; color:#8ef0b6; }
+  .fx { background:rgba(255,255,255,0.05); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
+  .fx .name { font-size:13px; color:#dfe8f5; word-break:break-all; display:flex; justify-content:space-between; gap:8px; }
+  .fx .name a { color:#7dd3fc; text-decoration:none; font-size:12px; }
+  .fx .bar { height:5px; border-radius:3px; background:rgba(255,255,255,0.1); margin-top:7px; overflow:hidden; }
+  .fx .bar i { display:block; height:100%; width:0%; background:linear-gradient(90deg,#22c55e,#38bdf8); transition:width .2s; }
+  .fx .stat { font-size:11px; color:#64748b; margin-top:4px; }
+  .fx.done-ok .stat { color:#8ef0b6; }
+  .fx.done-fail .stat { color:#f87171; }
+
+  /* 画质面板 */
+  .qgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .qopt { padding:16px 0; text-align:center; border:1px solid #2c3b5c; border-radius:14px; background:rgba(255,255,255,0.04); cursor:pointer; }
+  .qopt .qn { font-size:15px; font-weight:bold; color:#dfe8f5; }
+  .qopt .qd { font-size:11px; color:#64748b; margin-top:3px; }
+  .qopt.on { border-color:#22c55e; background:rgba(34,197,94,0.12); }
+  .qopt.on .qn { color:#8ef0b6; }
+
+  #toast { position:fixed; top:18%; left:50%; transform:translateX(-50%); padding:10px 22px; border-radius:999px; font-size:13px; z-index:60; opacity:0; transition:opacity .25s; pointer-events:none; }
+  #toast.show { opacity:1; }
+
+  /* ================= 悬浮真实鼠标（半透明，触摸时不透明度回升） ================= */
+  #vmouse { position:absolute; right:12px; bottom:90px; z-index:26; border-radius:18px; padding:8px 10px 10px; touch-action:none; -webkit-user-select:none; user-select:none; box-shadow:0 12px 36px rgba(0,0,0,0.5); opacity:0.6; transition:opacity .2s ease; }
+  #vmouse:active { opacity:0.92; }
+  #vmouse * { touch-action:none; }
+  #vmDrag { text-align:center; font-size:10px; color:#64748b; padding:3px 0 7px; letter-spacing:2px; cursor:move; }
+  #vmBody { width:88px; height:126px; margin:0 auto; border:2px solid #3b527a; border-radius:36px 36px 22px 22px; background:rgba(11,17,32,0.88); position:relative; overflow:hidden; }
+  #vmTop { display:flex; height:52%; }
+  #vmLeft, #vmRight { flex:1; }
+  #vmLeft { border-right:2px solid #3b527a; border-radius:32px 0 0 0; }
+  #vmRight { border-radius:0 32px 0 0; }
+  #vmLeft.on, #vmRight.on { background:rgba(34,197,94,0.45); }
+  #vmBottom { height:48%; }
+  #vmWheel { position:absolute; left:50%; top:8px; transform:translateX(-50%); width:26px; height:46px; border-radius:13px; background:#1c2a45; border:1px solid #3b527a; touch-action:none; z-index:2; }
+  #vmWheel i { display:block; width:12px; height:12px; border-radius:6px; background:#4a628c; margin:6px auto 0; }
+  #vmWheel.on i { background:#22c55e; box-shadow:0 0 8px #22c55e; }
+  .vmrow { display:flex; gap:6px; margin-top:8px; }
+  .vmbtn { flex:1; padding:8px 0; border:1px solid #2c3b5c; border-radius:9px; background:rgba(255,255,255,0.06); color:#dfe8f5; font-size:12px; cursor:pointer; }
+  .vmbtn:active { background:rgba(34,197,94,0.28); }
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="login">
+  <div class="logo">
+    <span class="badge">LAN REMOTE · 局域网直连</span>
+    <h1>手机控制端</h1>
+    <p>v{{VERSION}} · 无需公网 · 扫码即用</p>
+  </div>
+  <div class="card glass">
+    <div class="field">
+      <label>目标设备 ID</label>
+      <input id="deviceId" value="{{DEVICE_ID}}" inputmode="numeric" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>访问密码</label>
+      <input id="password" type="password" placeholder="临时密码或固定密码" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" onclick="doLogin('password')">连 接</button>
+    <button class="btn btn-ghost" onclick="doLogin('approval')">免密码 · 请求授权</button>
+    <div id="loginStatus"></div>
+  </div>
+</div>
+
+<!-- 远程 -->
+<div id="remote" class="hidden">
+  <div id="screenWrap">
+    <img id="screen" alt="">
+    <div id="topbar" class="glass"><span class="dot"></span><span id="hud">连接中…</span></div>
+    <button id="fsBtn" onclick="toggleFullscreenLandscape()" title="横屏全屏">⛶</button>
+  </div>
+
+  <div id="toolbar" class="glass">
+    <button class="tbtn" onclick="toggleVMouse()">🖱 鼠标</button>
+    <button class="tbtn" onclick="openDrawer('keyboard')">⌨ 键盘</button>
+    <button class="tbtn" onclick="openDrawer('files')">📄 文件</button>
+    <button class="tbtn" onclick="openDrawer('chat')">💬 聊天</button>
+    <button class="tbtn" onclick="openDrawer('quality')">⚙ 画质</button>
+    <button class="tbtn" onclick="logout()">✕</button>
+  </div>
+
+  <!-- 悬浮真实鼠标：左/右键按住=按下 松开=抬起（可在画面上拖拽），滚轮上下滑动 -->
+  <div id="vmouse" class="glass">
+    <div id="vmDrag">⠿ 拖动</div>
+    <div id="vmBody">
+      <div id="vmTop">
+        <div id="vmLeft"></div>
+        <div id="vmRight"></div>
+      </div>
+      <div id="vmBottom"></div>
+      <div id="vmWheel"><i></i></div>
+    </div>
+    <div class="vmrow">
+      <button class="vmbtn" onclick="vmDouble()">双击</button>
+      <button class="vmbtn" onclick="toggleVMouse()">收起</button>
+    </div>
+  </div>
+
+  <div id="drawer" class="glass">
+    <div id="drawerHead">
+      <span id="drawerTitle">面板</span>
+      <button id="drawerClose" onclick="closeDrawer()">✕</button>
+    </div>
+    <div id="drawerBody">
+      <!-- 键盘 -->
+      <div id="pane-keyboard" class="hidden">
+        <textarea id="keyInput" rows="3" placeholder="在此打字（拼音/中文/表情都支持）…&#10;英文数字自动逐字实时输入；含中文点下方按钮整段粘贴" autocomplete="off"></textarea>
+        <button id="keySendBtn" onclick="sendTextToPc()">📤 发送到电脑（粘贴输入 · 支持中文）</button>
+        <div class="keyrow">
+          <button class="kbtn" onclick="specialKey('enter')">回车 ⏎</button>
+          <button class="kbtn" onclick="specialKey('backspace')">退格 ⌫</button>
+          <button class="kbtn" onclick="specialKey('space')">空格</button>
+          <button class="kbtn" onclick="specialKey('tab')">Tab</button>
+        </div>
+        <div class="keyrow">
+          <button class="kbtn" onclick="specialKey('esc')">Esc</button>
+          <button class="kbtn" onclick="specialKey('up')">↑</button>
+          <button class="kbtn" onclick="specialKey('down')">↓</button>
+          <button class="kbtn" onclick="specialKey('left')">←</button>
+          <button class="kbtn" onclick="specialKey('right')">→</button>
+        </div>
+        <div class="keyrow">
+          <button class="kbtn" onclick="combo(['ctrl','a'])">全选</button>
+          <button class="kbtn" onclick="combo(['ctrl','c'])">复制</button>
+          <button class="kbtn" onclick="combo(['ctrl','v'])">粘贴</button>
+          <button class="kbtn" onclick="combo(['ctrl','s'])">保存</button>
+          <button class="kbtn" onclick="combo(['ctrl','z'])">撤销</button>
+        </div>
+        <div class="keyhint">英文/数字在输入框打字即实时逐字打到对方电脑；中文走剪贴板整段粘贴，不会丢字。下方按键直达对方电脑。</div>
+      </div>
+      <!-- 文件 -->
+      <div id="pane-files" class="hidden">
+        <label id="filePickLabel" for="filePick">📄 点击选择文件发送到对方电脑（支持多选）</label>
+        <input id="filePick" type="file" multiple onchange="sendFiles(this.files)">
+        <div id="fileList"></div>
+      </div>
+      <!-- 聊天 -->
+      <div id="pane-chat" class="hidden">
+        <div id="chatLog"></div>
+        <div id="chatSendRow">
+          <input id="chatInput" placeholder="输入消息…" autocomplete="off">
+          <button id="chatSend" onclick="sendChatText()">发送</button>
+        </div>
+      </div>
+      <!-- 画质 -->
+      <div id="pane-quality" class="hidden">
+        <div class="qgrid">
+          <div class="qopt" data-q="smooth" onclick="setQuality('smooth')"><div class="qn">流畅</div><div class="qd">30FPS · 省流量</div></div>
+          <div class="qopt" data-q="balanced" onclick="setQuality('balanced')"><div class="qn">均衡</div><div class="qd">30FPS · 1080P</div></div>
+          <div class="qopt" data-q="hd" onclick="setQuality('hd')"><div class="qn">高清</div><div class="qd">60FPS · 高质量</div></div>
+          <div class="qopt" data-q="ultra" onclick="setQuality('ultra')"><div class="qn">极致</div><div class="qd">60FPS · 最佳画质</div></div>
+        </div>
+        <div class="keyhint">切换立即生效，画面清晰度与流畅度实时变化。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="glass"></div>
+
+<script>
+"use strict";
+/* ============================================================
+ * LAN Remote 手机控制端
+ * 与桌面客户端使用完全相同的 JSON 协议（v2.0）直连被控端：
+ * login / heartbeat / screen / mouse_* / keyboard / chat / file_* / quality_set
+ * ============================================================ */
+var WS_PORT = {{WS_PORT}};
+
+var ws = null, connected = false, hbTimer = null;
+var frameW = 0, frameH = 0;
+var imgBusy = false, pendingImage = null;
+var currentDrawer = "";
+
+var $ = function (id) { return document.getElementById(id); };
+var screenImg = $("screen");
+
+function msg(type, data) {
+  return JSON.stringify({ version: "2.0", type: type, session: uid() + "-" + Date.now(),
+                          timestamp: Date.now() / 1000, data: data || {} });
+}
+function uid() { return uid._c || (uid._c = "web" + Math.random().toString(36).slice(2, 8)); }
+function toast(text) {
+  var t = $("toast");
+  t.textContent = text;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function () { t.classList.remove("show"); }, 1800);
+}
+function setStatus(text, isErr) {
+  var el = $("loginStatus");
+  el.textContent = text || "";
+  el.className = isErr ? "err" : "";
+}
+
+/* ================= 登录 ================= */
+function doLogin(mode) {
+  var id = $("deviceId").value.trim();
+  var pwd = $("password").value.trim();
+  if (!id) { setStatus("请填写设备 ID", true); return; }
+  if (mode === "password" && pwd.length < 4) { setStatus("请输入访问密码（至少 4 位）", true); return; }
+  setStatus("连接中…");
+  connect(function () {
+    var data = { device_id: id, mode: mode, version: "2.0" };
+    if (pwd) { data.password = pwd; }
+    ws.send(msg("login", data));
+    setStatus(mode === "approval" ? "已发送授权请求，请在电脑上点「同意」…" : "认证中…");
+  });
+}
+function connect(onOpen) {
+  try { if (ws) { ws.onclose = null; ws.close(); } } catch (e) {}
+  var host = location.hostname || "127.0.0.1";
+  ws = new WebSocket("ws://" + host + ":" + WS_PORT);
+  ws.onopen = function () { if (onOpen) { onOpen(); } startHeartbeat(); };
+  ws.onmessage = onMessage;
+  ws.onclose = function () {
+    stopHeartbeat();
+    if (connected) { teardown(); toast("连接已断开"); }
+    else { setStatus("无法连接，请确认手机与电脑在同一 Wi-Fi", true); }
+  };
+  ws.onerror = function () {};
+}
+function startHeartbeat() {
+  stopHeartbeat();
+  hbTimer = setInterval(function () {
+    if (ws && ws.readyState === 1) { ws.send(msg("heartbeat", { time: Date.now() / 1000 })); }
+  }, 15000);
+}
+function stopHeartbeat() { if (hbTimer) { clearInterval(hbTimer); hbTimer = null; } }
+function teardown() {
+  connected = false; stopHeartbeat();
+  try { ws && ws.close(); } catch (e) {}
+  closeDrawer();
+  $("vmouse").classList.add("hidden");
+  $("remote").classList.add("hidden");
+  $("login").classList.remove("hidden");
+}
+function logout() { teardown(); }
+
+/* ================= 消息分发（协议与桌面客户端一致） ================= */
+function onMessage(event) {
+  var packet;
+  try { packet = JSON.parse(event.data); } catch (e) { return; }
+  var type = packet.type, data = packet.data || {};
+  if (type === "login_success") {
+    connected = true;
+    setStatus("");
+    $("login").classList.add("hidden");
+    $("remote").classList.remove("hidden");
+    $("vmouse").classList.remove("hidden");
+    $("hud").textContent = "已连接 · " + (data.device_id || "对方");
+  } else if (type === "login_failed") {
+    connected = false;
+    setStatus("接入失败：" + (data.reason || "密码错误"), true);
+    try { ws.close(); } catch (e) {}
+  } else if (type === "screen") {
+    handleScreen(data);
+  } else if (type === "chat") {
+    appendChat(data.sender || "对方", data.text || "");
+    if (currentDrawer !== "chat") { toast("💬 " + (data.text || "").slice(0, 24)); }
+  } else if (type === "clipboard_data" || type === "clipboard_push") {
+    toast("📋 收到剪贴板内容");
+  } else if (type === "quality_state") {
+    markQuality(data.profile);
+    toast("画质已切换：" + profileName(data.profile));
+  } else if (type === "file_info") {
+    handleFileOffer(data);
+  } else if (type === "file_data") {
+    handleFileChunk(data);
+  } else if (type === "file_finish") {
+    handleFileFinish(data);
+  } else if (type === "file_cancel") {
+    handleFileCancel(data);
+  } else if (type === "file_progress") {
+    handleSendProgress(data);
+  } else if (type === "error") {
+    if (connected) { toast("⚠ " + (data.text || "服务端提示")); }
+  }
+}
+
+/* ================= 画面（背压：上一帧未绘制只保留最新一帧） ================= */
+function handleScreen(data) {
+  if (!data.image) { return; }
+  frameW = data.width || 0; frameH = data.height || 0;
+  if (imgBusy) { pendingImage = data.image; return; }
+  imgBusy = true;
+  screenImg.src = "data:image/jpeg;base64," + data.image;
+  screenImg.onload = function () {
+    imgBusy = false;
+    var fps = data.fps ? (data.fps + " FPS · ") : "";
+    $("hud").textContent = "已连接 · " + (frameW || screenImg.naturalWidth) + "×" +
+                           (frameH || screenImg.naturalHeight) + " · " + fps + "在线";
+    if (pendingImage) {
+      var next = pendingImage; pendingImage = null;
+      handleScreen({ image: next, width: frameW, height: frameH });
+    }
+  };
+}
+
+/* ================= 横屏全屏 ================= */
+function toggleFullscreenLandscape() {
+  var docEl = document.documentElement;
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen;
+    if (req) {
+      var result = req.call(docEl);
+      if (result && result.then) {
+        result.then(function () { lockLandscape(); }).catch(function () { toast("已尝试全屏"); });
+      } else { lockLandscape(); }
+    } else {
+      toast("当前浏览器不支持全屏，请手动旋转手机");
+    }
+  } else {
+    var exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) { exit.call(document); }
+    if (screen.orientation && screen.orientation.unlock) { screen.orientation.unlock(); }
+  }
+}
+function lockLandscape() {
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock("landscape").then(function () {
+      toast("已进入横屏全屏");
+    }).catch(function () { toast("已全屏，请手动旋转手机至横屏"); });
+  } else {
+    toast("已全屏，请手动旋转手机至横屏");
+  }
+}
+
+/* ================= 触控 -> 鼠标 ================= */
+function toRatio(touch) {
+  var rect = screenImg.getBoundingClientRect();
+  if (!rect.width || !rect.height) { return null; }
+  var x = (touch.clientX - rect.left) / rect.width;
+  var y = (touch.clientY - rect.top) / rect.height;
+  return { x: Math.min(1, Math.max(0, x)), y: Math.min(1, Math.max(0, y)) };
+}
+function sendMove(ratio) {
+  if (!connected) { return; }
+  /* 服务端坐标语义 = 画面像素坐标（map_position 按 target/source 缩放） */
+  var w = frameW || screenImg.naturalWidth || 0;
+  var h = frameH || screenImg.naturalHeight || 0;
+  if (!w || !h) { return; }
+  ws.send(msg("mouse_move", { x: Math.round(ratio.x * w), y: Math.round(ratio.y * h) }));
+}
+function sendClick(button, action, count) {
+  if (!connected) { return; }
+  ws.send(msg("mouse_click", { button: button, action: action, count: count }));
+}
+function sendScroll(value) {
+  if (!connected) { return; }
+  ws.send(msg("mouse_scroll", { value: value }));
+}
+(function bindTouch() {
+  var lastRatio = null, moved = false, startTime = 0;
+  screenImg.addEventListener("touchstart", function (e) {
+    if (!connected || e.touches.length !== 1) { return; }
+    lastRatio = toRatio(e.touches[0]); moved = false; startTime = Date.now();
+    if (lastRatio) { sendMove(lastRatio); }
+  }, { passive: true });
+  screenImg.addEventListener("touchmove", function (e) {
+    if (!connected || e.touches.length !== 1) { return; }
+    var ratio = toRatio(e.touches[0]);
+    if (ratio && lastRatio) {
+      if (Math.abs(ratio.x - lastRatio.x) > 0.002 || Math.abs(ratio.y - lastRatio.y) > 0.002) { moved = true; }
+      sendMove(ratio); lastRatio = ratio;
+    }
+    e.preventDefault();
+  }, { passive: false });
+  screenImg.addEventListener("touchend", function () {
+    if (!connected) { return; }
+    /* 轻点（未拖动且按压 < 400ms）= 在该位置左键单击 */
+    if (!moved && Date.now() - startTime < 400 && lastRatio) {
+      sendMove(lastRatio);
+      sendClick("left", "click", 1);
+    }
+    lastRatio = null;
+  });
+})();
+
+/* ================= 悬浮真实鼠标 =================
+ * 左/右键：按下=mouse_down 松开=mouse_up —— 轻点即单击，
+ * 按住左键再到画面上拖动即为真实拖拽；滚轮区上下滑动；双击键一键触发。
+ * 交互统一走「触摸 + 鼠标」双通道：preventDefault 抑制触摸后的合成
+ * 鼠标事件，ghost guard 时间窗兜底防止双触发。 */
+function toggleVMouse() { $("vmouse").classList.toggle("hidden"); }
+function vmDouble() {
+  sendClick("left", "click", 2);
+  toast("已双击");
+}
+(function bindVMHold() {
+  var lastTouch = 0;
+  function ghost() { return Date.now() - lastTouch < 700; }
+  function hold(id, button) {
+    var el = $(id), down = false;
+    function press() {
+      if (down || !connected) { return; }
+      down = true;
+      el.classList.add("on");
+      sendClick(button, "down");
+    }
+    function release() {
+      if (!down) { return; }
+      down = false;
+      el.classList.remove("on");
+      if (connected) { sendClick(button, "up"); }
+    }
+    el.addEventListener("touchstart", function (e) {
+      lastTouch = Date.now();
+      press();
+      e.preventDefault();
+    }, { passive: false });
+    el.addEventListener("touchend", release);
+    el.addEventListener("touchcancel", release);
+    el.addEventListener("mousedown", function (e) {
+      if (!ghost()) { press(); e.preventDefault(); }
+    });
+    el.addEventListener("mouseup", function () { if (!ghost()) { release(); } });
+    el.addEventListener("mouseleave", function () { if (!ghost()) { release(); } });
+  }
+  hold("vmLeft", "left");
+  hold("vmRight", "right");
+})();
+(function bindVMWheel() {
+  var wheel = $("vmWheel"), lastY = 0, active = false, lastTouch = 0;
+  function ghost() { return Date.now() - lastTouch < 700; }
+  function step(delta) {
+    while (delta >= 12) { sendScroll(1); delta -= 12; }
+    while (delta <= -12) { sendScroll(-1); delta += 12; }
+  }
+  function start(y) { lastY = y; active = true; wheel.classList.add("on"); }
+  function move(y) { if (active && connected) { step(lastY - y); lastY = y; } }
+  function end() { active = false; wheel.classList.remove("on"); }
+  wheel.addEventListener("touchstart", function (e) {
+    lastTouch = Date.now();
+    start(e.touches[0].clientY);
+    e.preventDefault();
+  }, { passive: false });
+  wheel.addEventListener("touchmove", function (e) {
+    move(e.touches[0].clientY);
+    e.preventDefault();
+  }, { passive: false });
+  wheel.addEventListener("touchend", end);
+  wheel.addEventListener("touchcancel", end);
+  wheel.addEventListener("mousedown", function (e) {
+    if (!ghost()) { start(e.clientY); e.preventDefault(); }
+  });
+  document.addEventListener("mousemove", function (e) { if (active && !ghost()) { move(e.clientY); } });
+  document.addEventListener("mouseup", function () { if (!ghost()) { end(); } });
+})();
+(function bindVMDrag() {
+  var vm = $("vmouse"), drag = $("vmDrag");
+  var sx = 0, sy = 0, ox = 0, oy = 0, moving = false, lastTouch = 0;
+  function ghost() { return Date.now() - lastTouch < 700; }
+  function start(x, y) {
+    var r = vm.getBoundingClientRect();
+    sx = x; sy = y; ox = r.left; oy = r.top; moving = true;
+  }
+  function move(x, y) {
+    var nx = ox + x - sx, ny = oy + y - sy;
+    nx = Math.max(4, Math.min(window.innerWidth - vm.offsetWidth - 4, nx));
+    ny = Math.max(4, Math.min(window.innerHeight - vm.offsetHeight - 4, ny));
+    vm.style.left = nx + "px"; vm.style.top = ny + "px";
+    vm.style.right = "auto"; vm.style.bottom = "auto";
+  }
+  drag.addEventListener("touchstart", function (e) {
+    lastTouch = Date.now();
+    start(e.touches[0].clientX, e.touches[0].clientY);
+    e.preventDefault();
+  }, { passive: false });
+  drag.addEventListener("touchmove", function (e) {
+    move(e.touches[0].clientX, e.touches[0].clientY);
+    e.preventDefault();
+  }, { passive: false });
+  drag.addEventListener("touchend", function () { moving = false; });
+  drag.addEventListener("mousedown", function (e) {
+    if (!ghost()) { start(e.clientX, e.clientY); e.preventDefault(); }
+  });
+  document.addEventListener("mousemove", function (e) { if (moving && !ghost()) { move(e.clientX, e.clientY); } });
+  document.addEventListener("mouseup", function () { if (!ghost()) { moving = false; } });
+})();
+
+/* ================= 抽屉 ================= */
+function openDrawer(kind) {
+  currentDrawer = kind;
+  $("drawer").classList.add("open");
+  $("drawerTitle").textContent = { keyboard: "键盘输入", files: "文件传输", chat: "在线聊天", quality: "画质档位" }[kind] || "";
+  var panes = ["keyboard", "files", "chat", "quality"];
+  for (var i = 0; i < panes.length; i++) {
+    $("pane-" + panes[i]).classList.toggle("hidden", panes[i] !== kind);
+  }
+  if (kind === "keyboard") { setTimeout(function () { $("keyInput").focus(); }, 300); }
+  if (kind === "chat") { var log = $("chatLog"); log.scrollTop = log.scrollHeight; }
+}
+function closeDrawer() {
+  $("drawer").classList.remove("open");
+  currentDrawer = "";
+}
+
+/* ================= 键盘 =================
+ * 手机输入法组合期间（拼音）不发送；纯 ASCII 实时逐字；
+ * 含中文等非 ASCII 字符走「剪贴板推送 + Ctrl+V」整段粘贴（被控端
+ * PyAutoGUI 不支持直接敲中文，粘贴是唯一可靠通道）。 */
+var SHIFTED = /[A-Z!@#$%^&*()_+{}|:"<>?~]/;
+var ASCII_ONLY = /^[\t\n\r\x20-\x7e]+$/;
+function typeChar(ch) {
+  if (!connected) { return; }
+  if (ch === "\n") { specialKey("enter"); return; }
+  if (SHIFTED.test(ch)) {
+    ws.send(msg("keyboard", { key: "shift", action: "down" }));
+    ws.send(msg("keyboard", { key: ch, action: "press" }));
+    ws.send(msg("keyboard", { key: "shift", action: "up" }));
+  } else {
+    ws.send(msg("keyboard", { key: ch, action: "press" }));
+  }
+}
+function specialKey(name) {
+  if (!connected) { return; }
+  ws.send(msg("keyboard", { key: name, action: "press" }));
+}
+function combo(keys, silent) {
+  if (!connected) { return; }
+  var mods = keys.slice(0, keys.length - 1), main = keys[keys.length - 1];
+  mods.forEach(function (k) { ws.send(msg("keyboard", { key: k, action: "down" })); });
+  ws.send(msg("keyboard", { key: main, action: "press" }));
+  mods.slice().reverse().forEach(function (k) { ws.send(msg("keyboard", { key: k, action: "up" })); });
+  if (!silent) { toast("已发送：" + keys.join("+")); }
+}
+var composing = false;
+var hintShown = false;
+function hintOnce(text) {
+  if (hintShown) { return; }
+  hintShown = true;
+  toast(text);
+}
+function handleKeyInput(el) {
+  var value = el.value;
+  if (!value) { return; }
+  if (ASCII_ONLY.test(value)) {
+    for (var i = 0; i < value.length; i++) { typeChar(value[i]); }
+    el.value = "";
+  } else {
+    hintOnce("已保留在输入框：点「发送到电脑」整段粘贴（支持中文）");
+  }
+}
+(function bindKeyInput() {
+  var el = $("keyInput");
+  el.addEventListener("compositionstart", function () { composing = true; });
+  el.addEventListener("compositionend", function () {
+    composing = false;
+    handleKeyInput(el);   /* Safari：input 先于 compositionend，这里补一次 */
+  });
+  el.addEventListener("input", function () {
+    if (!composing) { handleKeyInput(el); }
+  });
+})();
+function sendTextToPc() {
+  if (!connected) { return; }
+  var text = $("keyInput").value;
+  if (!text) { toast("请先输入要发送的文字"); return; }
+  ws.send(msg("clipboard_push", { text: text }));
+  setTimeout(function () { combo(["ctrl", "v"], true); }, 150);
+  $("keyInput").value = "";
+  toast("已输入到对方电脑（粘贴）");
+}
+
+/* ================= 聊天 ================= */
+function appendChat(sender, text) {
+  var log = $("chatLog");
+  var row = document.createElement("div");
+  var mine = sender === "我";
+  row.className = "msg " + (mine ? "mine" : "theirs");
+  var bubble = document.createElement("div");
+  bubble.className = "bubble";
+  var who = document.createElement("div"); who.className = "who"; who.textContent = sender;
+  var body = document.createElement("div"); body.textContent = text;
+  bubble.appendChild(who); bubble.appendChild(body);
+  row.appendChild(bubble); log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+}
+function sendChatText() {
+  var input = $("chatInput");
+  var text = input.value.trim();
+  if (!text || !connected) { return; }
+  ws.send(msg("chat", { text: text, sender: "手机" }));
+  appendChat("我", text);
+  input.value = "";
+}
+$("chatInput").addEventListener("keydown", function (e) { if (e.key === "Enter") { sendChatText(); } });
+
+/* ================= 文件传输 =================
+ * 与桌面客户端一致：发送方 FILE_INFO -> FILE_DATA*N -> FILE_FINISH；
+ * 接收方按 offer 落缓冲，定期回 FILE_PROGRESS，FINISH 组装下载。
+ * MD5 留空（服务端对空校验跳过）。 */
+var CHUNK_RAW = 48 * 1024;
+var transferSeq = 0;
+var sending = {};
+var receiving = {};
+
+function fmtSize(n) {
+  if (n >= 1073741824) { return (n / 1073741824).toFixed(1) + " GB"; }
+  if (n >= 1048576) { return (n / 1048576).toFixed(1) + " MB"; }
+  if (n >= 1024) { return (n / 1024).toFixed(1) + " KB"; }
+  return n + " B";
+}
+function fxRow(id, name) {
+  var row = document.createElement("div");
+  row.className = "fx"; row.id = "fx-" + id;
+  var line = document.createElement("div"); line.className = "name";
+  var left = document.createElement("span"); left.textContent = name;
+  var right = document.createElement("span");
+  line.appendChild(left); line.appendChild(right);
+  var bar = document.createElement("div"); bar.className = "bar";
+  var fill = document.createElement("i"); bar.appendChild(fill);
+  var stat = document.createElement("div"); stat.className = "stat";
+  row.appendChild(line); row.appendChild(bar); row.appendChild(stat);
+  $("fileList").prepend(row);
+  return row;
+}
+function setFx(id, pct, stat, cls) {
+  var row = document.getElementById("fx-" + id);
+  if (!row) { return; }
+  row.querySelector(".bar i").style.width = pct + "%";
+  row.querySelector(".stat").textContent = stat;
+  if (cls) { row.className = "fx " + cls; }
+}
+
+/* -------- 手机 -> 电脑 -------- */
+function sendFiles(fileList) {
+  if (!connected || !fileList || !fileList.length) { return; }
+  for (var i = 0; i < fileList.length; i++) { queueSend(fileList[i]); }
+  $("filePick").value = "";
+}
+function queueSend(file) {
+  var id = "web" + (++transferSeq) + "-" + Date.now();
+  fxRow(id, file.name + " → 对方电脑");
+  sending[id] = { name: file.name, total: file.size, received: 0 };
+  ws.send(msg("file_info", { transfer_id: id, name: file.name, size: file.size, md5: "", sender: "手机" }));
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    var buf = new Uint8Array(e.target.result);
+    var seq = 0;
+    var timer = setInterval(function () {
+      if (!connected) { clearInterval(timer); return; }
+      var start = seq * CHUNK_RAW;
+      if (start >= buf.length) {
+        clearInterval(timer);
+        ws.send(msg("file_finish", { transfer_id: id }));
+        return;
+      }
+      var end = Math.min(start + CHUNK_RAW, buf.length);
+      var slice = buf.subarray(start, end);
+      var binary = "";
+      for (var j = 0; j < slice.length; j++) { binary += String.fromCharCode(slice[j]); }
+      ws.send(msg("file_data", { transfer_id: id, seq: seq, chunk: btoa(binary) }));
+      sending[id].received = end;
+      setFx(id, Math.round(end * 100 / buf.length), "发送中 " + fmtSize(end) + " / " + fmtSize(buf.length));
+      seq++;
+    }, 60);
+  };
+  reader.readAsArrayBuffer(file);
+}
+function handleSendProgress(data) {
+  var t = sending[data.transfer_id];
+  if (!t) { return; }
+  if (data.done) {
+    if (data.ok) {
+      setFx(data.transfer_id, 100, "✓ 已发送到对方电脑（downloads 目录）", "done-ok");
+    } else {
+      setFx(data.transfer_id, 100, "✗ 发送失败：" + (data.message || "未知原因"), "done-fail");
+    }
+    delete sending[data.transfer_id];
+  }
+}
+
+/* -------- 电脑 -> 手机 -------- */
+function handleFileOffer(data) {
+  var id = data.transfer_id;
+  if (!id) { return; }
+  fxRow(id, data.name + " ← 对方电脑");
+  receiving[id] = { name: data.name, total: data.size || 0, chunks: [], received: 0, lastReported: 0 };
+  ws.send(msg("file_progress", { transfer_id: id, received: 0, total: data.size || 0 }));
+  toast("📥 对方发来文件：" + data.name);
+}
+function handleFileChunk(data) {
+  var t = receiving[data.transfer_id];
+  if (!t) { return; }
+  var bin = atob(data.chunk || "");
+  var bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) { bytes[i] = bin.charCodeAt(i); }
+  t.chunks.push(bytes);
+  t.received += bytes.length;
+  var pct = t.total ? Math.round(t.received * 100 / t.total) : 0;
+  setFx(data.transfer_id, pct, "接收中 " + fmtSize(t.received) + " / " + fmtSize(t.total));
+  if (t.received - t.lastReported > 6 * CHUNK_RAW) {
+    t.lastReported = t.received;
+    ws.send(msg("file_progress", { transfer_id: data.transfer_id, received: t.received, total: t.total }));
+  }
+}
+function handleFileFinish(data) {
+  var id = data.transfer_id, t = receiving[id];
+  if (!t) { return; }
+  var blob = new Blob(t.chunks, { type: "application/octet-stream" });
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement("a");
+  link.href = url; link.download = t.name; link.textContent = "⬇ 保存到手机";
+  var row = document.getElementById("fx-" + id);
+  if (row) {
+    row.querySelector(".name span:nth-child(2)").appendChild(link);
+    setFx(id, 100, "✓ 接收完成（" + fmtSize(t.received) + "），点「保存到手机」", "done-ok");
+  }
+  ws.send(msg("file_progress", { transfer_id: id, received: t.received, total: t.total, done: true, ok: true, name: t.name }));
+  delete receiving[id];
+  toast("✓ 文件已接收：" + t.name);
+}
+function handleFileCancel(data) {
+  var id = data.transfer_id;
+  if (receiving[id]) {
+    setFx(id, 100, "✗ 对方取消了传输", "done-fail");
+    delete receiving[id];
+  }
+}
+
+/* ================= 画质 ================= */
+function profileName(key) {
+  return { smooth: "流畅", balanced: "均衡", hd: "高清", ultra: "极致" }[key] || key;
+}
+function setQuality(key) {
+  if (!connected) { return; }
+  ws.send(msg("quality_set", { profile: key }));
+}
+function markQuality(key) {
+  var opts = document.querySelectorAll(".qopt");
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].classList.toggle("on", opts[i].getAttribute("data-q") === key);
+  }
+}
+</script>
+</body>
+</html>

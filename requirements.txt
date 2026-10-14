@@ -1,0 +1,24 @@
+# LAN Remote 运行依赖
+# 环境：Python 3.11+ / Windows
+#
+# 安装：python -m pip install -r requirements.txt
+
+# ---- 图形界面 ----
+PyQt6>=6.6,<7
+
+# ---- 网络通信 ----
+websockets>=12.0
+
+# ---- 屏幕采集与图像编码 ----
+mss>=9.0
+opencv-python>=4.8
+numpy>=1.24
+
+# ---- 远程控制（鼠标键盘） ----
+PyAutoGUI>=0.9.54
+
+# ---- 剪贴板同步 ----
+pyperclip>=1.8
+
+# ---- 数据加密 ----
+cryptography>=41.0

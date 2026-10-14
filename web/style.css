@@ -1,0 +1,66 @@
+/* LAN Remote 使用说明页样式 */
+
+body {
+    background: #16181d;
+    color: #e8eaf0;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    line-height: 1.7;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 0 20px 48px;
+}
+
+h1 {
+    text-align: center;
+    color: #4da3ff;
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+h2 {
+    color: #4da3ff;
+    font-size: 17px;
+    margin: 0 0 12px;
+}
+
+.card {
+    background: #1c1f26;
+    border: 1px solid #2c313b;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 18px;
+}
+
+ol,
+ul {
+    padding-left: 22px;
+    margin: 0;
+}
+
+li {
+    margin-bottom: 6px;
+}
+
+p {
+    margin: 0;
+}
+
+strong {
+    color: #ffd166;
+}
+
+.inline-code,
+code {
+    background: #232731;
+    border: 1px solid #333a46;
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13px;
+    color: #7ee2b8;
+}
